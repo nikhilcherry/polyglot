@@ -1,5 +1,7 @@
 # Hack-day plan (1–2 Dec 2026, 24 h)
 
+Already done before hack day (MVP in this repo): daemon + simulated hub, MCP server, visualiser, safety checks, tests, ESP32 firmware that compiles. Hack day = real radios, voice, AWS, polish.
+
 **The moment:** a judge presses a ₹250 doorbell with the laptop shut. The TV mutes, the hall-light servo flips, and a voice says someone is at the door.
 
 ## Lanes

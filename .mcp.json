@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "polyglot": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "polyglot.mcp_server"],
+      "env": { "POLYGLOT_URL": "http://127.0.0.1:8770" }
+    }
+  }
+}

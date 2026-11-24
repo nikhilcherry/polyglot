@@ -1,0 +1,20 @@
+[project]
+name = "polyglot"
+version = "0.1.0"
+description = "Teach your home once, then just say it: MCP bridge for dumb IR / 433 MHz devices"
+requires-python = ">=3.11"
+dependencies = ["fastmcp>=2.10", "aiohttp>=3.9", "pyserial>=3.5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+polyglotd = "polyglot.daemon:main"
+polyglot-mcp = "polyglot.mcp_server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["polyglot"]

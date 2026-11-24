@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polyglot · live hub</title>
+<style>
+:root{--bg:#0d1220;--card:#141b2e;--line:#2a3550;--ink:#f3ede2;--dim:#9aa3b8;--or:#ff8a3d;--ir:#ff4d6d;--rf:#3ddc97;--sky:#5aa9ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 700px at 70% 0%,#1a2340,var(--bg) 60%);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Inter,sans-serif;min-height:100vh}
+header{display:flex;align-items:center;gap:16px;padding:16px 24px;border-bottom:1px solid var(--line)}
+header h1{margin:0;font:600 26px Georgia,"Instrument Serif",serif;letter-spacing:.3px}header .tag{color:var(--dim)}
+.pill{padding:4px 12px;border-radius:999px;border:1px solid var(--line);font:600 12px ui-monospace,monospace;letter-spacing:.06em}
+.pill.on{border-color:var(--rf);color:var(--rf)}
+main{display:grid;grid-template-columns:330px 1fr 380px;gap:16px;padding:16px 24px}
+@media(max-width:1200px){main{grid-template-columns:1fr}}
+.card{background:rgba(20,27,46,.92);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 10px;font:700 12px ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--or)}
+button{background:#1c2540;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:600 14px inherit;cursor:pointer}
+button:hover{border-color:var(--or)}button.pri{background:var(--or);color:#1a0e04;border-color:var(--or)}button.warn{border-color:var(--ir);color:var(--ir)}
+input,select{background:#0d1220;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.btns button{text-align:left;font-size:13px}
+.room{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.app{border:1px solid var(--line);border-radius:12px;padding:10px;min-height:96px;position:relative}
+.app b{display:block;font-size:13px;color:var(--dim)}.app .v{font:700 18px system-ui;margin-top:6px}
+.tvscr{height:46px;border-radius:6px;background:#0a0f1c;margin-top:6px;display:flex;align-items:end;gap:3px;padding:4px}
+.tvscr i{flex:1;background:#5aa9ff;opacity:.7;border-radius:2px}
+.fan{font-size:34px;display:inline-block}.spin{animation:sp .6s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.bulb{width:30px;height:30px;border-radius:50%;background:#333;display:inline-block;vertical-align:middle;transition:.2s}.bulb.on{background:#ffd36b;box-shadow:0 0 28px #ffd36b}
+.servo{display:inline-block;width:44px;height:6px;background:var(--dim);border-radius:3px;transform-origin:6px 3px;margin-left:12px;vertical-align:middle;transition:transform .25s}
+canvas{width:100%;height:150px;background:#0a0f1c;border-radius:12px;border:1px solid var(--line)}
+.dec{font:600 16px ui-monospace,monospace;margin-top:8px}.dec .n{color:var(--or)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.msg{margin-top:8px;color:var(--dim);font-size:14px}.msg.ok{color:var(--rf)}.msg.bad{color:var(--ir)}
+.draft{border:1px solid var(--or);border-radius:12px;padding:12px;margin-top:10px}.draft p{margin:0 0 8px}
+.draft.phys{border-color:var(--ir)}.rule{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px;font-size:14px}
+.sig{font:13px ui-monospace,monospace;color:var(--dim);margin:3px 0}.sig b{color:var(--ink)}
+#log{font:12.5px ui-monospace,monospace;max-height:340px;overflow:auto}#log div{padding:3px 0;border-bottom:1px solid #1b2338}
+#log .k-fired{color:var(--rf)}#log .k-learn{color:var(--sky)}#log .k-rule{color:var(--or)}#log .k-draft{color:#ffc58f}
+.flash{animation:fl .8s}@keyframes fl{from{box-shadow:0 0 0 3px var(--rf)}to{box-shadow:0 0 0 0 transparent}}
+.small{font-size:12px;color:var(--dim)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0a0f1c;border:1px solid var(--rf);padding:12px 20px;border-radius:12px;font-size:18px;opacity:0;transition:.3s}
+</style>
+</head>
+<body>
+<header><h1>Polyglot</h1><span class="tag">teach your home once, then just say it</span><span style="flex:1"></span>
+  <span class="pill" id="mode">…</span><span class="pill on" id="offline">rules run on the hub</span></header>
+<main>
+  <section>
+    <div class="card" id="roomcard"><h2>Living room (simulated)</h2>
+      <div class="small" style="margin-bottom:8px">Press a physical button. It reaches the hub as IR or 433 MHz radio.</div>
+      <div class="btns" id="buttons"></div></div>
+    <div class="card"><h2>Appliances</h2><div class="room">
+      <div class="app" id="a_tv"><b>TV</b><div class="v" id="tvv">on</div><div class="tvscr" id="tvbars"></div></div>
+      <div class="app" id="a_fan"><b>Fan</b><span class="fan" id="fanicon">✣</span><div class="v" id="fanv">off</div></div>
+      <div class="app" id="a_light"><b>Hall light · servo on the switch</b><span class="bulb" id="bulb"></span><span class="servo" id="servo"></span><div class="v" id="lightv">off</div></div>
+      <div class="app" id="a_spk"><b>Hub speaker</b><div class="v" id="spk" style="font-size:14px">—</div></div>
+    </div></div>
+  </section>
+  <section>
+    <div class="card"><h2>Signal scope · what the hub hears and sends</h2><canvas id="scope" width="1200" height="300"></canvas>
+      <div class="dec" id="dec">waiting for a press…</div></div>
+    <div class="card"><h2>1 · Teach (press twice)</h2>
+      <div class="row"><input id="lname" placeholder="name, e.g. doorbell" size="18"><select id="lkind"><option value="trigger">trigger (listen)</option><option value="action">action (send)</option></select>
+        <button class="pri" onclick="teach()">Teach</button></div><div class="msg" id="lmsg"></div></div>
+    <div class="card"><h2>2 · Say it</h2>
+      <div class="row"><input id="say" style="flex:1;min-width:260px" value="When the doorbell rings, mute the TV, switch on the hall light and tell Amma someone is at the door"><button onclick="mic()" title="speak (browser speech-to-text)">🎙</button><button class="pri" onclick="sayIt()">Draft rule</button></div>
+      <div class="small" style="margin-top:6px">Or ask Claude through the Polyglot MCP server. Either way it becomes a draft that only a person can approve here.</div>
+      <div class="msg" id="smsg"></div><div id="drafts"></div></div>
+    <div class="card"><h2>3 · Live: rules stored on the hub</h2><div id="rules" class="small">none yet</div></div>
+  </section>
+  <section>
+    <div class="card"><h2>Taught in this home</h2><div id="signals" class="small">nothing yet</div></div>
+    <div class="card"><h2>Audit log</h2><div id="log"></div></div>
+  </section>
+</main>
+<div id="toast"></div>
+<script>
+const HUMAN = "__HUMAN_TOKEN__";
+let S = {signals:[],rules:[],drafts:[],log:[],room:{},buttons:{}}, lastPulses=null, lastKind="rx";
+const $ = (id) => document.getElementById(id);
+const api = async (m, p, b) => { const r = await fetch(p, {method:m, headers:{"Content-Type":"application/json","X-Polyglot-Human":HUMAN}, body:b?JSON.stringify(b):undefined}); const j = await r.json(); if(!r.ok) throw new Error(j.error||r.status); return j; };
+function speak(t, url){ if(url){ new Audio(url).play(); return; } if(!window.speechSynthesis) return; const u=new SpeechSynthesisUtterance(t); u.rate=1; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+function toast(t){ const e=$("toast"); e.textContent=t; e.style.opacity=1; clearTimeout(e._t); e._t=setTimeout(()=>e.style.opacity=0,3500); }
+function flash(id){ const e=$(id); e.classList.remove("flash"); void e.offsetWidth; e.classList.add("flash"); }
+
+function drawScope(p, kind){ const c=$("scope"), g=c.getContext("2d"); g.clearRect(0,0,c.width,c.height);
+  g.strokeStyle="#1e2740"; for(let x=0;x<c.width;x+=60){g.beginPath();g.moveTo(x,0);g.lineTo(x,c.height);g.stroke();}
+  if(!p) return; const tot=p.reduce((a,b)=>a+b,0), sx=(c.width-40)/tot; let x=20, hi=true; const top=70, bot=230;
+  g.strokeStyle= kind==="tx" ? "#ff4d6d" : "#3ddc97"; g.lineWidth=3; g.beginPath(); g.moveTo(x,bot);
+  for(const d of p){ const y= hi?top:bot; g.lineTo(x,y); x+=d*sx; g.lineTo(x,y); hi=!hi; } g.lineTo(x,bot); g.stroke();
+  g.fillStyle="#9aa3b8"; g.font="22px ui-monospace,monospace"; g.fillText(`${kind==="tx"?"SENT":"HEARD"} · ${p.length} edges · ${(tot/1000).toFixed(1)} ms`, 20, 40); }
+
+function render(){
+  $("mode").textContent = S.sim ? "SIMULATED HUB" : "ESP32 HUB"; $("roomcard").style.display = S.sim ? "" : "none";
+  $("buttons").innerHTML = Object.entries(S.buttons||{}).map(([k,l])=>`<button onclick="press('${k}')">${k==="car_key"?"🔑":k==="doorbell"?"🔔":k.startsWith("tv")?"📺":"🌀"} ${l}</button>`).join("");
+  const r=S.room||{}, tv=r.tv||{}, fan=r.fan||{}, li=r.light||{};
+  $("tvv").textContent = !tv.power ? "off" : tv.muted ? "on · 🔇 muted" : "on · 🔊 loud";
+  $("tvbars").innerHTML = Array.from({length:18},(_,i)=>`<i style="height:${!tv.power?0:tv.muted?4:12+30*Math.abs(Math.sin(i*1.7+Date.now()/400))}px"></i>`).join("");
+  $("fanv").textContent = fan.on ? `on · speed ${fan.speed}` : "off"; $("fanicon").className = "fan" + (fan.on ? " spin":"");
+  $("bulb").className = "bulb" + (li.on ? " on":""); $("servo").style.transform = `rotate(${-(li.servo||0)}deg)`; $("lightv").textContent = li.on ? `on · servo ${li.servo}°` : `off · servo ${li.servo||0}°`;
+  $("spk").textContent = (r.speaker&&r.speaker.last) ? `“${r.speaker.last}”` : "—";
+  $("signals").innerHTML = S.signals.length ? S.signals.map(s=>`<div class="sig"><b>${s.name}</b> · ${s.kind} · ${s.code.src} ${s.code.proto} ${s.code.addr}/${s.code.cmd}</div>`).join("") : "nothing yet: use Teach";
+  $("rules").innerHTML = S.rules.length ? S.rules.map(x=>`<div class="rule">#${x.id} · ${x.summary} <button class="warn" style="float:right;padding:2px 8px" onclick="delRule(${x.id})">delete</button></div>`).join("") : "none yet";
+  const pend = S.drafts.filter(d=>d.status==="pending");
+  $("drafts").innerHTML = pend.map(d=>`<div class="draft ${d.physical?"phys":""}"><p>🔊 ${d.readback}</p><div class="small">from ${d.source}</div>
+    ${d.physical?`<label class="small" style="color:var(--ir);display:block;margin:6px 0"><input type="checkbox" id="ph_${d.id}"> Yes, it may move the physical light switch (second confirmation)</label>`:""}
+    <div class="row" style="margin-top:6px"><button class="pri" onclick="approve('${d.id}')">Approve · store on hub</button><button onclick="reject('${d.id}')">Reject</button></div></div>`).join("");
+  if(S.learning){ const L=S.learning; $("lmsg").textContent=L.msg; $("lmsg").className="msg "+(L.status==="saved"?"ok":L.status==="refused"?"bad":""); }
+  $("log").innerHTML = S.log.slice().reverse().map(e=>`<div class="k-${e.kind}">${new Date(e.t*1000).toLocaleTimeString()} · ${e.text}</div>`).join("");
+}
+setInterval(()=>{ if(S.room&&S.room.tv&&S.room.tv.power&&!S.room.tv.muted) render(); }, 400);
+
+async function press(d){ await api("POST","/api/sim/press",{device:d}); }
+async function teach(){ const n=$("lname").value.trim(); if(!n) return; try{ await api("POST","/api/learn",{name:n,kind:$("lkind").value}); }catch(e){ $("lmsg").textContent=e.message; $("lmsg").className="msg bad"; } }
+async function sayIt(){ $("smsg").textContent=""; try{ await api("POST","/api/say",{text:$("say").value}); }catch(e){ $("smsg").textContent=e.message; $("smsg").className="msg bad"; } }
+async function approve(id){ const ph=$("ph_"+id); try{ await api("POST",`/api/drafts/${id}/approve`,{physical_ok: ph?ph.checked:false}); toast("Rule stored on the hub. Close the laptop: it keeps working."); }catch(e){ toast(e.message); } }
+async function reject(id){ await api("POST",`/api/drafts/${id}/reject`,{}); }
+async function delRule(id){ await api("DELETE",`/api/rules/${id}`); }
+function mic(){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){ toast("This browser has no speech-to-text; type the rule instead"); return; }
+  const r=new SR(); r.lang=navigator.language||"en-IN"; r.onresult=(e)=>{ $("say").value=e.results[0][0].transcript; sayIt(); }; r.start(); toast("Listening…"); }
+
+function connect(){ const ws=new WebSocket(`ws://${location.host}/ws`);
+  ws.onmessage=(e)=>{ const m=JSON.parse(e.data);
+    if(m.ev==="store"){ S=m.store; render(); }
+    else if(m.ev==="rx"||m.ev==="tx"){ lastPulses=m.pulses; lastKind=m.ev; drawScope(m.pulses,m.ev);
+      $("dec").innerHTML = `${m.ev==="rx"?"heard":"sent"} <span class="n">${m.name||""}</span> · ${m.src} · ${m.proto} · addr ${m.addr} · cmd ${m.cmd}${m.rssi?` · ${m.rssi} dBm`:""}`; }
+    else if(m.ev==="fired"){ ["a_tv","a_light","a_spk"].forEach(flash); toast(`Rule #${m.rule} fired on the hub`); }
+    else if(m.ev==="play"){ speak(m.text, m.audio); }
+    else if(m.ev==="readback"){ speak(m.draft.readback); }
+  };
+  ws.onclose=()=>setTimeout(connect,1000); }
+connect(); drawScope(null);
+</script>
+</body>
+</html>
