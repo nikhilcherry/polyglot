@@ -42,6 +42,7 @@ git clone https://github.com/nikhilcherry/polyglot && cd polyglot
 | `firmware/polyglot_hub/` | ESP32 firmware: CC1101 + rc-switch, IRremoteESP8266 (incl. AC state frames), servo, rules in NVS, same JSON-lines protocol |
 | `tests/` | pytest suite |
 
+- 🎬 Pitch video (3:39): https://youtu.be/a4x9vHFWEKI
 - 📑 Deck: [`deck/ARVYO_Track1.pdf`](deck/ARVYO_Track1.pdf)
 - 🧭 Architecture and interfaces: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 - 🛡️ Safety model: [`docs/SAFETY.md`](docs/SAFETY.md)
